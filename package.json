@@ -1,0 +1,12 @@
+{
+  "name": "schema-mapper",
+  "version": "0.1.0",
+  "author": "Yeremi Loli",
+  "homepage": "https://github.com/yeremi/schema-mapper",
+  "description": "A PHP library for mapping external API data to PHP objects using PHP 8 attributes.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yeremi/schema-mapper.git"
+  }
+}
