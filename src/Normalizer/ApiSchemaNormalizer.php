@@ -8,7 +8,6 @@ use ReflectionClass;
 use ReflectionProperty;
 use Yeremi\SchemaMapper\Attributes\ApiSchema;
 use Yeremi\SchemaMapper\Exceptions\InvalidMappingException;
-use Yeremi\SchemaMapper\Exceptions\TypeMismatchException;
 
 class ApiSchemaNormalizer implements NormalizerInterface
 {
@@ -29,11 +28,21 @@ class ApiSchemaNormalizer implements NormalizerInterface
 
                     // Handle nested objects
                     if ($apiSchemaAttribute->getTargetClass() && is_array($value)) {
-                        $nestedObject = $this->normalize($value, $apiSchemaAttribute->getTargetClass());
-                        $property->setValue($object, $nestedObject);
+                        // If it's an array, check if the property is a collection or an object.
+                        if ($apiSchemaAttribute->isArray()) {
+                            // Map an array of objects.
+                            $nestedObjects = [];
+                            foreach ($value as $item) {
+                                $nestedObjects[] = $this->normalize($item, $apiSchemaAttribute->getTargetClass());
+                            }
+                            $property->setValue($object, $nestedObjects);
+                        } else {
+                            // If it's a nested object instead of an array of objects.
+                            $nestedObject = $this->normalize($value, $apiSchemaAttribute->getTargetClass());
+                            $property->setValue($object, $nestedObject);
+                        }
                     } else {
-                        $this->ensureValidType($property, $value);
-                        $property->setValue($object, $value);
+                        $this->ensureValidType($object, $property, $value);
                     }
                 }
             }
@@ -50,7 +59,7 @@ class ApiSchemaNormalizer implements NormalizerInterface
         return $attributes ? $attributes[0]->newInstance() : null;
     }
 
-    private function ensureValidType(ReflectionProperty $property, $value): void
+    private function ensureValidType(object $object, ReflectionProperty $property, $value): void
     {
         $type = $property->getType();
         if (! $type) {
@@ -63,10 +72,12 @@ class ApiSchemaNormalizer implements NormalizerInterface
         // Handle null values for nullable properties
         if ($value === null) {
             if (! $isNullable) {
-                throw new TypeMismatchException(
-                    sprintf("Property '%s' does not allow null values", $property->getName())
-                );
+                return;
             }
+
+            // Assign the default value of the property, based on its type
+            $defaultValue = $this->getDefaultValueForType($typeName);
+            $property->setValue($object, $defaultValue);
 
             return;
         }
@@ -91,5 +102,19 @@ class ApiSchemaNormalizer implements NormalizerInterface
                 )
             );
         }
+
+        $property->setValue($object, $value);
+    }
+
+    private function getDefaultValueForType(string $typeName): mixed
+    {
+        return match($typeName) {
+            'int' => 0,
+            'string' => '',
+            'float' => 0.0,
+            'bool' => false,
+            'array' => [],
+            default => null,
+        };
     }
 }

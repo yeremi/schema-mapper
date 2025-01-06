@@ -10,6 +10,8 @@ use Yeremi\SchemaMapper\Normalizer\ApiSchemaNormalizer;
 use Yeremi\SchemaMapper\Normalizer\NormalizerInterface;
 use Yeremi\SchemaMapper\Tests\Fixtures\Address;
 use Yeremi\SchemaMapper\Tests\Fixtures\ComplexUser;
+use Yeremi\SchemaMapper\Tests\Fixtures\Highlight\Highlight;
+use Yeremi\SchemaMapper\Tests\Fixtures\Highlight\HighlightEvent;
 use Yeremi\SchemaMapper\Tests\Fixtures\SimpleUser;
 use Yeremi\SchemaMapper\Tests\Fixtures\UserWithAddress;
 use Yeremi\SchemaMapper\Tests\Fixtures\UserWithAge;
@@ -61,12 +63,12 @@ class ApiSchemaNormalizerTest extends TestCase
         $this->normalizer->normalize($data, UserWithAge::class);
     }
 
-    public function testNullableProperty(): void
+    public function testNullablePropertyShouldBeUseThePropertyDefinition(): void
     {
         // Test with null value
         $data1 = ['description' => null];
         $result1 = $this->normalizer->normalize($data1, UserWithNullable::class);
-        $this->assertNull($result1->getDescription());
+        $this->assertIsString($result1->getDescription());
 
         // Test with string value
         $data2 = ['description' => 'test description'];
@@ -98,5 +100,45 @@ class ApiSchemaNormalizerTest extends TestCase
         $this->assertEquals('Doe', $result->getLastName());
         $this->assertEquals(30, $result->getAge());
         $this->assertTrue($result->isActive());
+    }
+
+    public function testResponseWithArrayOfObjects()
+    {
+
+        $responseBody = <<<JSON
+[
+  {
+    "event": {
+      "id": "27853"
+    }
+  },
+  {
+    "event": {
+      "id": "28350"
+    }
+  },
+  {
+    "event": {
+      "id": "26748"
+    }
+  }
+]
+JSON;
+        $responseArray = json_decode($responseBody, true);
+
+        /** @var HighlightEvent[] $highlights */
+        $highlights = [];
+        foreach ($responseArray as $data) {
+            $highlights[] = $this->normalizer->normalize($data, Highlight::class);
+        }
+
+        foreach ($highlights as $highlight) {
+            $this->assertInstanceOf(Highlight::class, $highlight);
+            $this->assertInstanceOf(HighlightEvent::class, $highlight->getEvent());
+            $this->assertTrue(
+                method_exists($highlight->getEvent(), 'getId'),
+                'The method "getId" does not exist in TargetClass.'
+            );
+        }
     }
 }
