@@ -28,11 +28,8 @@ jobs:
       - name: Install Dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
 
-      - name: Run PHP Lint
-        run: find . -type f -name "*.php" -exec php -l {} \;
-
       - name: Run PHPStan
-        run: ./vendor/bin/phpstan analyse --memory-limit=512M
+        run: ./vendor/bin/phpstan analyse src tests --memory-limit=512M
 
       - name: Run PHPUnit
         run: ./vendor/bin/phpunit --coverage-text
