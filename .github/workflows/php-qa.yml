@@ -25,11 +25,16 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
 
+      - name: Check PHP version
+        run: php -v
+
       - name: Install Dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
+        uses: ramsey/composer-install@v1
+        with:
+          composer-options: "--prefer-dist --no-cache"
 
       - name: Run PHPStan
-        run: ./vendor/bin/phpstan analyse src tests --memory-limit=512M
+        run: ./vendor/bin/phpstan analyse -l 10 src tests --memory-limit=512M
 
       - name: Run PHPUnit
         run: ./vendor/bin/phpunit --coverage-text

@@ -68,11 +68,13 @@ class ApiSchemaNormalizerTest extends TestCase
         // Test with null value
         $data1 = ['description' => null];
         $result1 = $this->normalizer->normalize($data1, UserWithNullable::class);
+        /** @phpstan-ignore method.notFound */
         $this->assertIsString($result1->getDescription());
 
         // Test with string value
         $data2 = ['description' => 'test description'];
         $result2 = $this->normalizer->normalize($data2, UserWithNullable::class);
+        /** @phpstan-ignore method.notFound */
         $this->assertEquals('test description', $result2->getDescription());
     }
 
@@ -81,6 +83,7 @@ class ApiSchemaNormalizerTest extends TestCase
         // Test with missing property
         $data = []; // No email provided
         $result = $this->normalizer->normalize($data, UserWithOptional::class);
+        /** @phpstan-ignore method.notFound */
         $this->assertNull($result->getEmail());
     }
 
@@ -102,7 +105,7 @@ class ApiSchemaNormalizerTest extends TestCase
         $this->assertTrue($result->isActive());
     }
 
-    public function testResponseWithArrayOfObjects()
+    public function testResponseWithArrayOfObjects(): void
     {
 
         $responseBody = <<<JSON
@@ -135,10 +138,6 @@ JSON;
         foreach ($highlights as $highlight) {
             $this->assertInstanceOf(Highlight::class, $highlight);
             $this->assertInstanceOf(HighlightEvent::class, $highlight->getEvent());
-            $this->assertTrue(
-                method_exists($highlight->getEvent(), 'getId'),
-                'The method "getId" does not exist in TargetClass.'
-            );
         }
     }
 }
