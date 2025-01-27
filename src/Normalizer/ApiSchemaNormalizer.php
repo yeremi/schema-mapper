@@ -5,14 +5,25 @@ declare(strict_types=1);
 namespace Yeremi\SchemaMapper\Normalizer;
 
 use ReflectionClass;
+use ReflectionNamedType;
 use ReflectionProperty;
 use Yeremi\SchemaMapper\Attributes\ApiSchema;
 use Yeremi\SchemaMapper\Exceptions\InvalidMappingException;
 
 class ApiSchemaNormalizer implements NormalizerInterface
 {
+    /**
+     * Normalize the given data into the target class.
+     *
+     * @param array<string, mixed> $data The data to normalize.
+     * @param string $targetClass The target class to normalize the data into.
+     * @return object The normalized object.
+     * @throws InvalidMappingException
+     * @throws \ReflectionException
+     */
     public function normalize(array $data, string $targetClass): object
     {
+        /** @var class-string $targetClass */
         $reflectionClass = new ReflectionClass($targetClass);
         $object = $reflectionClass->newInstanceWithoutConstructor();
 
@@ -59,11 +70,21 @@ class ApiSchemaNormalizer implements NormalizerInterface
         return $attributes ? $attributes[0]->newInstance() : null;
     }
 
-    private function ensureValidType(object $object, ReflectionProperty $property, $value): void
+    private function ensureValidType(object $object, ReflectionProperty $property, mixed $value): void
     {
         $type = $property->getType();
         if (! $type) {
             return;
+        }
+
+        if (! $type instanceof ReflectionNamedType) {
+            throw new InvalidMappingException(
+                sprintf(
+                    "Unsupported type for property '%s'. Expected named type, got '%s'.",
+                    $property->getName(),
+                    get_class($type)
+                )
+            );
         }
 
         $typeName = $type->getName();

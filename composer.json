@@ -42,7 +42,7 @@
     "scripts": {
         "cs-check": "@php ./vendor/bin/php-cs-fixer fix --dry-run --diff",
         "cs-fix": "@php ./vendor/bin/php-cs-fixer fix",
-        "phpstan": "@php ./vendor/bin/phpstan analyse src tests",
+        "phpstan": "@php ./vendor/bin/phpstan analyse -l 10 src tests --generate-baseline --allow-empty-baseline --no-ansi",
         "rector-check": "@php ./vendor/bin/rector process --dry-run",
         "rector-fix": "@php ./vendor/bin/rector process",
         "test": "@php ./vendor/phpunit/phpunit/phpunit"

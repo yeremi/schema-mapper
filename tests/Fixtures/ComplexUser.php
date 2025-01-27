@@ -20,6 +20,26 @@ class ComplexUser
     #[ApiSchema('is_active')]
     private bool $isActive;
 
+    public function setFirstName(string $firstName): void
+    {
+        $this->firstName = $firstName;
+    }
+
+    public function setLastName(string $lastName): void
+    {
+        $this->lastName = $lastName;
+    }
+
+    public function setAge(int $age): void
+    {
+        $this->age = $age;
+    }
+
+    public function setIsActive(bool $isActive): void
+    {
+        $this->isActive = $isActive;
+    }
+
     public function getFirstName(): string
     {
         return $this->firstName;

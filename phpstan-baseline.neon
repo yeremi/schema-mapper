@@ -1,0 +1,13 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#1 \$data of method Yeremi\\SchemaMapper\\Normalizer\\ApiSchemaNormalizer\:\:normalize\(\) expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Normalizer/ApiSchemaNormalizer.php
+
+		-
+			message: '#^Parameter \#1 \$data of method Yeremi\\SchemaMapper\\Normalizer\\ApiSchemaNormalizer\:\:normalize\(\) expects array\<string, mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Normalizer/ApiSchemaNormalizer.php

@@ -10,4 +10,14 @@ class UserWithAge
 {
     #[ApiSchema('age')]
     private int $age;
+
+    public function getAge(): int
+    {
+        return $this->age;
+    }
+
+    public function setAge(int $age): void
+    {
+        $this->age = $age;
+    }
 }

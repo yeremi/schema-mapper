@@ -14,6 +14,16 @@ class Address
     #[ApiSchema('city')]
     private string $city;
 
+    public function setStreet(string $street): void
+    {
+        $this->street = $street;
+    }
+
+    public function setCity(string $city): void
+    {
+        $this->city = $city;
+    }
+
     public function getStreet(): string
     {
         return $this->street;
