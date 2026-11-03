@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Yeremi\SchemaMapper\Normalizer;
 
 use ReflectionClass;
+use ReflectionException;
 use ReflectionNamedType;
 use ReflectionProperty;
 use Yeremi\SchemaMapper\Attributes\ApiSchema;
@@ -19,7 +20,7 @@ class ApiSchemaNormalizer implements NormalizerInterface
      * @param string $targetClass The target class to normalize the data into.
      * @return object The normalized object.
      * @throws InvalidMappingException
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     public function normalize(array $data, string $targetClass): object
     {
@@ -82,7 +83,7 @@ class ApiSchemaNormalizer implements NormalizerInterface
                 sprintf(
                     "Unsupported type for property '%s'. Expected named type, got '%s'.",
                     $property->getName(),
-                    get_class($type)
+                    $type::class
                 )
             );
         }
