@@ -10,7 +10,7 @@ final class EventImage
 {
     public function __construct(
         #[ApiSchema('url')]
-        private readonly string $url = '',
+        private string $url = '',
     ) {
     }
 

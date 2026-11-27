@@ -13,13 +13,13 @@ final class Event
      */
     public function __construct(
         #[ApiSchema('id')]
-        private readonly string $id = '',
+        private string $id = '',
         #[ApiSchema('title')]
-        private readonly string $title = '',
+        private string $title = '',
         #[ApiSchema('rating')]
-        private readonly float $rating = 0.0,
+        private float $rating = 0.0,
         #[ApiSchema('images', EventImage::class, true)]
-        private readonly array $images = [],
+        private array $images = [],
     ) {
     }
 
