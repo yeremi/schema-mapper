@@ -27,40 +27,115 @@ class ApiSchemaNormalizer implements NormalizerInterface
         /** @var class-string $targetClass */
         $reflectionClass = new ReflectionClass($targetClass);
         $object = $reflectionClass->newInstanceWithoutConstructor();
+        $promotedDefaults = $this->getPromotedPropertyDefaults($reflectionClass);
 
         foreach ($reflectionClass->getProperties() as $property) {
             $apiSchemaAttribute = $this->getApiSchemaAttribute($property);
 
-            if ($apiSchemaAttribute) {
-                $property->setAccessible(true);
-                $key = $apiSchemaAttribute->getKey();
-
-                if (array_key_exists($key, $data)) {
-                    $value = $data[$key];
-
-                    // Handle nested objects
-                    if ($apiSchemaAttribute->getTargetClass() && is_array($value)) {
-                        // If it's an array, check if the property is a collection or an object.
-                        if ($apiSchemaAttribute->isArray()) {
-                            // Map an array of objects.
-                            $nestedObjects = [];
-                            foreach ($value as $item) {
-                                $nestedObjects[] = $this->normalize($item, $apiSchemaAttribute->getTargetClass());
-                            }
-                            $property->setValue($object, $nestedObjects);
-                        } else {
-                            // If it's a nested object instead of an array of objects.
-                            $nestedObject = $this->normalize($value, $apiSchemaAttribute->getTargetClass());
-                            $property->setValue($object, $nestedObject);
-                        }
-                    } else {
-                        $this->ensureValidType($object, $property, $value);
-                    }
-                }
+            if (! $apiSchemaAttribute) {
+                continue;
             }
+
+            $property->setAccessible(true);
+            $key = $apiSchemaAttribute->getKey();
+
+            if (! array_key_exists($key, $data)) {
+                $this->applyPromotedDefault($object, $property, $promotedDefaults);
+
+                continue;
+            }
+
+            $value = $data[$key];
+            $nestedClass = $apiSchemaAttribute->getTargetClass();
+
+            // Handle nested objects
+            if ($nestedClass && is_array($value)) {
+                // If it's an array, check if the property is a collection or an object.
+                if ($apiSchemaAttribute->isArray()) {
+                    $property->setValue($object, $this->normalizeList($value, $nestedClass, $property));
+                } else {
+                    // If it's a nested object instead of an array of objects.
+                    $property->setValue($object, $this->normalize($value, $nestedClass));
+                }
+
+                continue;
+            }
+
+            $this->ensureValidType($object, $property, $value, $promotedDefaults);
         }
 
         return $object;
+    }
+
+    /**
+     * Map a list of nested objects. `null` items are skipped and the result is re-indexed.
+     *
+     * @param array<mixed> $items
+     * @return list<object>
+     * @throws InvalidMappingException
+     * @throws ReflectionException
+     */
+    private function normalizeList(array $items, string $targetClass, ReflectionProperty $property): array
+    {
+        $nestedObjects = [];
+        foreach ($items as $index => $item) {
+            if ($item === null) {
+                continue;
+            }
+
+            if (! is_array($item)) {
+                throw new InvalidMappingException(
+                    sprintf(
+                        "Invalid item at index %s for property '%s'. Expected array, got '%s'.",
+                        $index,
+                        $property->getName(),
+                        gettype($item)
+                    )
+                );
+            }
+
+            /** @var array<string, mixed> $item JSON objects decode to string-keyed arrays. */
+            $nestedObjects[] = $this->normalize($item, $targetClass);
+        }
+
+        return $nestedObjects;
+    }
+
+    /**
+     * Default values of promoted constructor parameters, keyed by property name.
+     *
+     * `newInstanceWithoutConstructor()` skips the constructor, so these defaults
+     * are never applied unless the normalizer applies them itself.
+     *
+     * @param ReflectionClass<object> $reflectionClass
+     * @return array<string, mixed>
+     * @throws ReflectionException
+     */
+    private function getPromotedPropertyDefaults(ReflectionClass $reflectionClass): array
+    {
+        $defaults = [];
+        foreach ($reflectionClass->getConstructor()?->getParameters() ?? [] as $parameter) {
+            if ($parameter->isPromoted() && $parameter->isDefaultValueAvailable()) {
+                $defaults[$parameter->getName()] = $parameter->getDefaultValue();
+            }
+        }
+
+        return $defaults;
+    }
+
+    /**
+     * Assign the declared default of a promoted property, if it has one and is still uninitialised.
+     *
+     * @param array<string, mixed> $promotedDefaults
+     */
+    private function applyPromotedDefault(object $object, ReflectionProperty $property, array $promotedDefaults): void
+    {
+        $name = $property->getName();
+        if (! array_key_exists($name, $promotedDefaults) || $property->isInitialized($object)) {
+            return;
+        }
+
+        $property->setValue($object, $promotedDefaults[$name]);
     }
 
     private function getApiSchemaAttribute(ReflectionProperty $property): ?ApiSchema
@@ -71,7 +146,10 @@ class ApiSchemaNormalizer implements NormalizerInterface
         return $attributes ? $attributes[0]->newInstance() : null;
     }
 
-    private function ensureValidType(object $object, ReflectionProperty $property, mixed $value): void
+    /**
+     * @param array<string, mixed> $promotedDefaults
+     */
+    private function ensureValidType(object $object, ReflectionProperty $property, mixed $value, array $promotedDefaults): void
     {
         $type = $property->getType();
         if (! $type) {
@@ -94,6 +172,8 @@ class ApiSchemaNormalizer implements NormalizerInterface
         // Handle null values for nullable properties
         if ($value === null) {
             if (! $isNullable) {
+                $this->applyPromotedDefault($object, $property, $promotedDefaults);
+
                 return;
             }
 
@@ -102,6 +182,11 @@ class ApiSchemaNormalizer implements NormalizerInterface
             $property->setValue($object, $defaultValue);
 
             return;
+        }
+
+        // JSON doesn't tell 20 from 20.0: widen int to float, as PHP does without strict types.
+        if ($typeName === 'float' && is_int($value)) {
+            $value = (float) $value;
         }
 
         // For non-null values, check the type
