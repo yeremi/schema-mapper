@@ -2,6 +2,13 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [1.0.2](https://github.com/yeremi/schema-mapper/compare/v1.0.1...v1.0.2) (2026-11-27)
+
+
+### Bug Fixes
+
+* apply declared defaults and accept int for float in normalizer ([c1b06ae](https://github.com/yeremi/schema-mapper/commit/c1b06ae1e9d960738e1a7a9d9366890320abe46a)), closes [#4](https://github.com/yeremi/schema-mapper/issues/4)
+
 ## [1.0.1](https://github.com/yeremi/schema-mapper/compare/v1.0.0...v1.0.1) (2025-01-06)
 
 
