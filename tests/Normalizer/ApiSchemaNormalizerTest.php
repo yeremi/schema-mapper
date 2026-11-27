@@ -10,6 +10,7 @@ use Yeremi\SchemaMapper\Normalizer\ApiSchemaNormalizer;
 use Yeremi\SchemaMapper\Normalizer\NormalizerInterface;
 use Yeremi\SchemaMapper\Tests\Fixtures\Address;
 use Yeremi\SchemaMapper\Tests\Fixtures\ComplexUser;
+use Yeremi\SchemaMapper\Tests\Fixtures\Event\Event;
 use Yeremi\SchemaMapper\Tests\Fixtures\Highlight\Highlight;
 use Yeremi\SchemaMapper\Tests\Fixtures\Highlight\HighlightEvent;
 use Yeremi\SchemaMapper\Tests\Fixtures\SimpleUser;
@@ -139,5 +140,62 @@ JSON;
             $this->assertInstanceOf(Highlight::class, $highlight);
             $this->assertInstanceOf(HighlightEvent::class, $highlight->getEvent());
         }
+    }
+
+    public function testMissingKeyUsesPromotedPropertyDefault(): void
+    {
+        $event = $this->normalizeEventJson('{"title": "Concert"}');
+
+        $this->assertSame('', $event->getId());
+        $this->assertSame('Concert', $event->getTitle());
+        $this->assertSame(0.0, $event->getRating());
+        $this->assertSame([], $event->getImages());
+    }
+
+    public function testNullOnNonNullablePropertyUsesPromotedPropertyDefault(): void
+    {
+        $event = $this->normalizeEventJson('{"id": null, "title": "Concert", "rating": null, "images": null}');
+
+        $this->assertSame('', $event->getId());
+        $this->assertSame(0.0, $event->getRating());
+        $this->assertSame([], $event->getImages());
+    }
+
+    public function testIntegerIsAcceptedForFloatProperty(): void
+    {
+        $this->assertSame(20.0, $this->normalizeEventJson('{"rating": 20}')->getRating());
+        $this->assertSame(0.0, $this->normalizeEventJson('{"rating": 0}')->getRating());
+        $this->assertSame(4.5, $this->normalizeEventJson('{"rating": 4.5}')->getRating());
+    }
+
+    public function testNullItemsInListAreSkipped(): void
+    {
+        $event = $this->normalizeEventJson('{"images": [null, {"url": "a.jpg"}, null, {"url": "b.jpg"}]}');
+
+        $images = $event->getImages();
+        $this->assertCount(2, $images);
+        $this->assertSame([0, 1], array_keys($images));
+        $this->assertSame('a.jpg', $images[0]->getUrl());
+        $this->assertSame('b.jpg', $images[1]->getUrl());
+    }
+
+    public function testScalarItemInListThrowsInvalidMappingException(): void
+    {
+        $this->expectException(InvalidMappingException::class);
+        $this->expectExceptionMessage("Invalid item at index 0 for property 'images'. Expected array, got 'string'.");
+
+        $this->normalizeEventJson('{"images": ["a.jpg"]}');
+    }
+
+    private function normalizeEventJson(string $json): Event
+    {
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        $this->assertIsArray($data);
+
+        /** @var array<string, mixed> $data */
+        $event = $this->normalizer->normalize($data, Event::class);
+        $this->assertInstanceOf(Event::class, $event);
+
+        return $event;
     }
 }
