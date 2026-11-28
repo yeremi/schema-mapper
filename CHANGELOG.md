@@ -2,6 +2,16 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+# [2.0.0](https://github.com/yeremi/schema-mapper/compare/v1.0.2...v2.0.0) (2026-11-28)
+
+
+* feat!: require PHP 8.2 and move tests to PHPUnit 11 ([afd14a8](https://github.com/yeremi/schema-mapper/commit/afd14a87629c52014273d598148b0a17813266dc)), closes [#4](https://github.com/yeremi/schema-mapper/issues/4)
+
+
+### BREAKING CHANGES
+
+* the library now requires PHP >= 8.2.
+
 ## [1.0.2](https://github.com/yeremi/schema-mapper/compare/v1.0.1...v1.0.2) (2026-11-27)
 
 
