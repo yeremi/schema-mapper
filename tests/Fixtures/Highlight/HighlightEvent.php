@@ -10,7 +10,7 @@ class HighlightEvent
 {
     public function __construct(
         #[ApiSchema('id')]
-        private string $id = ''
+        private readonly string $id = ''
     ) {
     }
 
