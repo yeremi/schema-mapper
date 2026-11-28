@@ -10,7 +10,7 @@ class Highlight
 {
     public function __construct(
         #[ApiSchema('event', HighlightEvent::class)]
-        private ?HighlightEvent $event = null
+        private readonly ?HighlightEvent $event = null
     ) {
     }
 

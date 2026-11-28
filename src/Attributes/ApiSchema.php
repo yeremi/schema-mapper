@@ -10,9 +10,9 @@ use Attribute;
 class ApiSchema
 {
     public function __construct(
-        private string  $key,
-        private ?string $targetClass = null,
-        private bool $isArray = false
+        private readonly string  $key,
+        private readonly ?string $targetClass = null,
+        private readonly bool $isArray = false
     ) {
     }
 

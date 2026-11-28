@@ -35,8 +35,6 @@ class ApiSchemaNormalizer implements NormalizerInterface
             if (! $apiSchemaAttribute) {
                 continue;
             }
-
-            $property->setAccessible(true);
             $key = $apiSchemaAttribute->getKey();
 
             if (! array_key_exists($key, $data)) {
@@ -140,7 +138,6 @@ class ApiSchemaNormalizer implements NormalizerInterface
 
     private function getApiSchemaAttribute(ReflectionProperty $property): ?ApiSchema
     {
-        $property->setAccessible(true);
         $attributes = $property->getAttributes(ApiSchema::class);
 
         return $attributes ? $attributes[0]->newInstance() : null;
