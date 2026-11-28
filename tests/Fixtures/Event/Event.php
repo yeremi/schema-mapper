@@ -6,7 +6,7 @@ namespace Yeremi\SchemaMapper\Tests\Fixtures\Event;
 
 use Yeremi\SchemaMapper\Attributes\ApiSchema;
 
-final class Event
+final readonly class Event
 {
     /**
      * @param EventImage[] $images

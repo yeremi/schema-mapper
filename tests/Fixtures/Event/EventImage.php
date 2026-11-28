@@ -6,7 +6,7 @@ namespace Yeremi\SchemaMapper\Tests\Fixtures\Event;
 
 use Yeremi\SchemaMapper\Attributes\ApiSchema;
 
-final class EventImage
+final readonly class EventImage
 {
     public function __construct(
         #[ApiSchema('url')]

@@ -19,7 +19,7 @@ A PHP library for mapping external API data to PHP objects using PHP 8 attribute
 
 ## Requirements
 
-- PHP 8.0+
+- PHP 8.2+
 
 ## Installation
 
